@@ -12,11 +12,13 @@ public class Import
     //
     // Add mods present in initial config but not in exported one
 
-    public List<ModData> importModsFromFile(Stream stream)
+
+    public List<ModData> Get (List<ModData> importedMods, List<ModData> existingMods)
     {
-        var extractedMods = new List<ModData>();
-        return extractedMods;
+        if (!importedMods.Any()) throw new ArgumentException(null, nameof (importedMods));
+
+        var newModList = new List<ModData>();
+
+        return newModList;
     }
-    
-    
 }

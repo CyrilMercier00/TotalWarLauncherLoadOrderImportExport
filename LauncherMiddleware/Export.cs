@@ -1,4 +1,5 @@
-﻿using LauncherMiddleware.Utils;
+﻿using LauncherMiddleware.Models;
+using Logging;
 using Newtonsoft.Json;
 
 namespace LauncherMiddleware;
@@ -6,38 +7,46 @@ namespace LauncherMiddleware;
 public static class Export
 {
     /// <summary>
-    ///     Returns a file containing the load order for a game
+    /// Returns a file containing the load order for a game
     /// </summary>
     /// <param name="gameName"></param>
+    /// <param name="launcherDataPath"></param>
+    /// <param name="logger"></param>
     /// <returns></returns>
-    public static MemoryStream ExportMods (GameName gameName)
+    public static MemoryStream CreateFile (GameName gameName, string launcherDataPath, Logger? logger)
     {
         try
         {
-            Logger.Log($"Exporting mod data to stream for {gameName}");
+            logger?.Log($"Exporting mod data to stream for {gameName}");
 
-            string? path = Config.LauncherDataPath;
-            var mods = Commons.GetModsFromFile(path);
-            var filteredMods = mods.Where(mod => mod.Game == gameName).ToList();
-            var stream = ExportMods(filteredMods);
+            var stream = File.Open(launcherDataPath, FileMode.Open);
+            var mods = Commons.GetModsFromStream(stream, logger);
+            var filteredMods = mods.Where(mod => mod.Game == gameName && mod.Active).ToList();
+            var exportStream = CreateFile(filteredMods, logger);
 
-            return stream;
+            return exportStream;
         }
         catch (Exception e)
         {
-            Logger.Log(e, e.Message);
+            logger?.Log(e, e.Message);
             throw;
         }
     }
 
+    public static MemoryStream CreateFile (GameName gameName, string launcherDataPath)
+    {
+        return CreateFile(gameName, launcherDataPath, null);
+    }
+
     /// <summary>
-    ///     Returns a file containing the load order for a game
+    /// Returns a file containing the load order for a game
     /// </summary>
     /// <param name="mods"></param>
+    /// <param name="logger"></param>
     /// <returns></returns>
-    public static MemoryStream ExportMods (List<ModData> mods)
+    private static MemoryStream CreateFile (List<ModData> mods, Logger? logger)
     {
-        Logger.Log($"Exporting mod data to stream for {mods.Count} mods");
+        logger?.Log($"Exporting mod data to stream for {mods.Count} mods");
         var stream = new MemoryStream();
         try
         {
@@ -51,7 +60,7 @@ public static class Export
         catch (Exception e)
         {
             stream.Dispose();
-            Logger.Log(e, e.Message);
+            logger?.Log(e, e.Message);
             throw;
         }
     }

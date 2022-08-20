@@ -1,8 +1,10 @@
-﻿namespace LauncherMiddleware;
+﻿using LauncherMiddleware.Models;
+
+namespace LauncherMiddleware;
 
 public class ModData
 {
-    public string? Uuid { get; set; }
+    public string Uuid { get; set; }
     public int Order { get; set; }
     public bool Active { get; set; }
     public GameName Game { get; set; }

@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LauncherMiddleware", "Launc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportExportInterface", "ImportExportInterface\ImportExportInterface.csproj", "{B5FB6C59-CD45-4D2A-BE90-ECA93A362DC8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Logging", "Logging\Logging.csproj", "{A1E0B0F5-59EA-40DC-92A2-3F8D20F5C92C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B5FB6C59-CD45-4D2A-BE90-ECA93A362DC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B5FB6C59-CD45-4D2A-BE90-ECA93A362DC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B5FB6C59-CD45-4D2A-BE90-ECA93A362DC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1E0B0F5-59EA-40DC-92A2-3F8D20F5C92C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1E0B0F5-59EA-40DC-92A2-3F8D20F5C92C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1E0B0F5-59EA-40DC-92A2-3F8D20F5C92C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1E0B0F5-59EA-40DC-92A2-3F8D20F5C92C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
