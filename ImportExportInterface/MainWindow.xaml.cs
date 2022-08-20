@@ -21,7 +21,7 @@ namespace ImportExportInterface
         private void ButtonExport_Click(object sender, RoutedEventArgs e)
         {
             var savePath = SelectFolder("Save exported file");
-            var stream = LauncherMiddleware.Export.ExportDataToStream(LauncherMiddleware.GameName.warhammer3);
+            var stream = LauncherMiddleware.Export.ExportMods(LauncherMiddleware.GameName.warhammer3);
             var fileStream = File.Create(savePath + ExportFileName);
             
             stream.Position = 0;

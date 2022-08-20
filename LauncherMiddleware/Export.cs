@@ -1,20 +1,32 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text.Json;
+﻿using LauncherMiddleware.Utils;
+using Newtonsoft.Json;
 
 namespace LauncherMiddleware;
 
 public static class Export
 {
-    public static MemoryStream ExportDataToStream(GameName gameName)
+    /// <summary>
+    /// Returns a file containing the load order for a game
+    /// </summary>
+    /// <param name="gameName"></param>
+    /// <returns></returns>
+    public static MemoryStream ExportMods(GameName gameName)
     {
         Logger.Log($"Exporting mod data to stream for {gameName}");
-        var modData = GetModData(gameName);
-        return ExportDataToStream(modData);
+
+        var path = Config.LauncherDataPath;
+        var mods = Commons.GetModsFromFile(path).Where(mod => mod.Game == gameName).ToList();
+        var stream = ExportMods(mods);
+        
+        return stream;
     }
 
-    public static MemoryStream ExportDataToStream(List<ModData> mods)
+    /// <summary>
+    /// Returns a file containing the load order for a game
+    /// </summary>
+    /// <param name="mods"></param>
+    /// <returns></returns>
+    public static MemoryStream ExportMods(List<ModData> mods)
     {
         Logger.Log($"Exporting mod data to stream for {mods.Count} mods");
         var stream = new MemoryStream();
@@ -33,51 +45,5 @@ public static class Export
             Logger.Log(e);
             throw;
         }
-    }
-
-    public static List<ModData> GetModData(GameName gameName)
-    {
-        var lines = GetRawLauncherData();
-        var mods = GetConvertedModData(lines);
-        var gameMods = mods.Where(mod => mod.Game == gameName).ToList();
-
-        Logger.Log($"Extracted {gameMods.Count} for {gameName}");
-
-        return gameMods;
-    }
-
-    private static List<ModData> GetConvertedModData(string[] lines)
-    {
-        var extractedMods = new List<ModData>();
-
-        Logger.Log($"Converting mod data");
-
-        var deserializedMods = JsonConvert.DeserializeObject<List<ModData>>(lines[0]);
-        if (deserializedMods != null)
-        {
-            Logger.Log($"Mods extracted succesfully, {deserializedMods.Count} mods found");
-            extractedMods.AddRange(deserializedMods);
-        }
-        else
-        {
-            Logger.Log($"No mods found");
-        }
-
-        return extractedMods;
-    }
-
-    private static string[] GetRawLauncherData()
-    {
-        Logger.Log($"Reading launcher data from {Paths.LauncherDataPath} ");
-
-        var lines = File.ReadAllLines(Paths.LauncherDataPath);
-        if (!lines.Any())
-        {
-            Logger.Log($"No text found in {Paths.LauncherDataPath}");
-            return lines;
-        }
-
-        Logger.Log($"{lines.Length} lines read from file");
-        return lines;
     }
 }
