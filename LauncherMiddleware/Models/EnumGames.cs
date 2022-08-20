@@ -1,10 +1,8 @@
-﻿using Newtonsoft.Json;
-
-namespace LauncherMiddleware;
+﻿namespace LauncherMiddleware;
 
 public enum GameName
 {
     warhammer3,
     warhammer2,
-    threekingdoms,
+    threekingdoms
 }

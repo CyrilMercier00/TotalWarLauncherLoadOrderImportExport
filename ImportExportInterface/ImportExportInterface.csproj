@@ -8,11 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="WindowsAPICodePack" Version="1.1.3" />
+        <PackageReference Include="WindowsAPICodePack" Version="1.1.3"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LauncherMiddleware\LauncherMiddleware.csproj" />
+        <ProjectReference Include="..\LauncherMiddleware\LauncherMiddleware.csproj"/>
     </ItemGroup>
 
 </Project>
