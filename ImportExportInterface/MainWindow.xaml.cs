@@ -50,7 +50,7 @@ namespace ImportExportInterface
                 Title = modalTitle,
             };
 
-            string folder = string.Empty;
+            var folder = string.Empty;
             if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
             {
                 folder = dlg.FileName;

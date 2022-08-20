@@ -12,17 +12,26 @@ public static class Export
     /// <returns></returns>
     public static MemoryStream ExportMods(GameName gameName)
     {
-        Logger.Log($"Exporting mod data to stream for {gameName}");
+        try
+        {
+            Logger.Log($"Exporting mod data to stream for {gameName}");
 
-        var path = Config.LauncherDataPath;
-        var mods = Commons.GetModsFromFile(path).Where(mod => mod.Game == gameName).ToList();
-        var stream = ExportMods(mods);
-        
-        return stream;
+            var path = Config.LauncherDataPath;
+            var mods = Commons.GetModsFromFile(path);
+            var filteredMods = mods.Where(mod => mod.Game == gameName).ToList();
+            var stream = ExportMods(filteredMods);
+
+            return stream;
+        }
+        catch (Exception e)
+        {
+            Logger.Log(e, e.Message);
+            throw;
+        }
     }
 
     /// <summary>
-    /// Returns a file containing the load order for a game
+    ///  Returns a file containing the load order for a game
     /// </summary>
     /// <param name="mods"></param>
     /// <returns></returns>
@@ -42,7 +51,7 @@ public static class Export
         catch (Exception e)
         {
             stream.Dispose();
-            Logger.Log(e);
+            Logger.Log(e, e.Message);
             throw;
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace LauncherMiddleware;
+﻿using System.Diagnostics;
+
+namespace LauncherMiddleware;
 
 internal static class Logger
 {
@@ -15,7 +17,7 @@ internal static class Logger
 
         streamWriter.WriteLine(DateTime.Now);
         if (!string.IsNullOrEmpty(message)) streamWriter.WriteLine(message);
-        if (e is not null) streamWriter.WriteLine(e);
+        if (e is not null) streamWriter.WriteLine(e.InnerException);
         streamWriter.WriteLine();
 
         streamWriter.Close();
@@ -23,6 +25,8 @@ internal static class Logger
 
     private static string GenerateDefaultLogPath()
     {
-        return Directory.GetCurrentDirectory() + "\\latest.log";
+        var path = Directory.GetCurrentDirectory() + "\\latest.log";
+        Console.Write($"Log output : {path}");
+        return path;
     }
 }
