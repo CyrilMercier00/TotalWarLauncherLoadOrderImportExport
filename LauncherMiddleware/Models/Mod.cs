@@ -1,8 +1,6 @@
-﻿using LauncherMiddleware.Models;
+﻿namespace LauncherMiddleware.Models;
 
-namespace LauncherMiddleware;
-
-public class ModData
+public abstract class Mod
 {
     public string Uuid { get; set; }
     public int Order { get; set; }

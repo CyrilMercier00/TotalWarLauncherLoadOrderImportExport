@@ -1,6 +1,7 @@
 ﻿using LauncherMiddleware.Models;
 using Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace LauncherMiddleware;
 
@@ -44,15 +45,19 @@ public static class Export
     /// <param name="mods"></param>
     /// <param name="logger"></param>
     /// <returns></returns>
-    private static MemoryStream CreateFile (List<ModData> mods, Logger? logger)
+    private static MemoryStream CreateFile (List<Mod> mods, Logger? logger)
     {
         logger?.Log($"Exporting mod data to stream for {mods.Count} mods");
         var stream = new MemoryStream();
         try
         {
-            var writer = new StreamWriter(stream);
+            var options = new JsonSerializerSettings
+            {
+                Converters = { new StringEnumConverter() }
+            };
 
-            string? modString = JsonConvert.SerializeObject(mods);
+            string? modString = JsonConvert.SerializeObject(mods, options);
+            var writer = new StreamWriter(stream);
             writer.Write(modString);
 
             return stream;

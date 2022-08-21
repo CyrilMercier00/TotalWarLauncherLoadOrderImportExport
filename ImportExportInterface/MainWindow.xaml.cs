@@ -72,7 +72,7 @@ public partial class MainWindow
         string savePath = Utils.SelectFolder("Select the exported load order to import", dlFolder);
 
         // Extract mods from file
-        var importedMods = new List<ModData>();
+        var importedMods = new List<Mod>();
         using (var stream = File.Open(savePath, FileMode.Open))
         {
             var mods = Commons.GetModsFromStream(stream, _logger);
