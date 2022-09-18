@@ -1,13 +1,14 @@
 ﻿using System.Reflection;
 
-namespace Logging;
+namespace Logger;
 
 public class Logger
 {
+    private string Filename { get; }
     private const string OutputDirectory = "./Logs";
-    public static bool Toggled = true;
+    private bool _toggled;
 
-    public Logger ()
+    public Logger()
     {
         // Backup old logs
         var existingLogs = new List<string>();
@@ -24,24 +25,16 @@ public class Logger
         File.Create(Filename);
     }
 
-    /// <summary>
-    /// Name of the file where the logs are written
-    /// </summary>
-    private string Filename { get; }
+    public void On() { _toggled = true; }
+    public void Off() { _toggled = false; }
 
-    public void Log (Exception e)
-    {
-        Log(e, string.Empty);
-    }
+    public void Log(Exception e) => Log(e, string.Empty);
 
-    public void Log (string message)
-    {
-        Log(null, message);
-    }
+    public void Log(string message) => Log(null, message);
 
-    public void Log (Exception? e, string message)
+    public void Log(Exception? e, string message)
     {
-        if (!Toggled) return;
+        if (!_toggled) return;
 
         string name = Assembly.GetCallingAssembly().GetName().Name ?? "defaultName";
         string fileName = string.Concat(name, ".log");

@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows;
 using LauncherMiddleware;
 using LauncherMiddleware.Models;
-using Logging;
 using Newtonsoft.Json;
 
 namespace ImportExportInterface;
@@ -18,44 +16,51 @@ public partial class MainWindow
 {
     private const string ExportFileName = "\\loadOrder.json";
     private const GameName SelectedGame = GameName.warhammer3; // TODO : Implement game selection
-    private readonly string _launcherDataPath;
-    private readonly Logger _logger;
+    private readonly string _launcherData;
+    private readonly FileInfo _launcherDataInfo;
+    private readonly Logger.Logger _logger;
 
-    public MainWindow ()
+    public MainWindow()
     {
         InitializeComponent();
 
         // Inintalize logginng
-        _logger = new Logger();
-        Logger.Toggled = true;
+        _logger = new Logger.Logger();
+        _logger.On();
 
         // Get launcher data file
-        _launcherDataPath = Utils.FindLauncherDataPath(_logger);
+        _launcherData = FileUtilities.FindLauncherDataPath(_logger);
 
-        if (!string.IsNullOrEmpty(_launcherDataPath)) return;
+        // Ask to select the launcher data folder if it wasn't found
+        if (string.IsNullOrEmpty(_launcherData))
+        {
+            string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            DisplayMessage("Select the folder containing the data for the launcher");
+            string folder = FileUtilities.SelectFolder("", roaming);
+            _launcherData = folder;
+        }
 
-        string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string folder = Utils.SelectFolder("roaming", roaming);
-        _launcherDataPath = folder;
+        _launcherDataInfo = new FileInfo(_launcherData);
     }
-
-    [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
-    private static extern string SHGetKnownFolderPath ([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken = 0);
 
     /// <summary>
     /// Exprort to file
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void ButtonExport_Click (object sender, RoutedEventArgs e)
+    private void ButtonExport_Click(object sender, RoutedEventArgs e)
     {
-        string dlFolder = SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
-        string savePath = Utils.SelectFolder("Save exported file", dlFolder);
+        string dlFolder = FileUtilities.SHGetKnownFolderPath(FileUtilities.RoamingFolderGuid, 0);
+        DisplayMessage("Select the folder where the file will be saved");
+        string savePath = FileUtilities.SelectFolder("", dlFolder);
+        if (string.IsNullOrEmpty(savePath)) return;
 
-        var stream = LauncherMethods.CreateFile(SelectedGame, _launcherDataPath, _logger);
+        var stream = LauncherMethods.ExportToStream(SelectedGame, _launcherData, _logger);
         var fileStream = File.Create(savePath + ExportFileName);
 
         stream.Position = 0;
+        fileStream.Position = 0;
+
         stream.CopyTo(fileStream);
         fileStream.Close();
     }
@@ -65,11 +70,13 @@ public partial class MainWindow
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void ButtonImport_Click (object sender, RoutedEventArgs e)
+    private void ButtonImport_Click(object sender, RoutedEventArgs e)
     {
         // Select import file
-        string dlFolder = SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
-        string savePath = Utils.SelectFolder("Select the exported load order to import", dlFolder);
+        string dlFolder = FileUtilities.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
+        DisplayMessage("Select the exported load order to import");
+        string savePath = FileUtilities.SelectFile("", dlFolder);
+        if (string.IsNullOrEmpty(savePath)) return;
 
         // Extract mods from file
         var importedMods = new List<Mod>();
@@ -90,7 +97,7 @@ public partial class MainWindow
         for (int i = 0; i < importedMods.Count; i++) importedMods[i].Order = i;
 
         // Retrieve existing mods
-        using var fileStream = File.Open(_launcherDataPath, FileMode.Open);
+        using var fileStream = File.Open(_launcherData, FileMode.Open);
         var launcherModsConfig = LauncherMethods.GetModsFromStream(fileStream, _logger);
 
         // Filter out other games
@@ -131,12 +138,17 @@ public partial class MainWindow
         newModList.AddRange(modsNotInImport);
         newModList.AddRange(modsForOtherGames);
 
-        // Backup old config        
-        string backupName = string.Format(_launcherDataPath, ".backup");
-        File.Copy(_launcherDataPath, backupName);
+        // Backup old config
+        string mainDir = _launcherDataInfo.Directory!.FullName;
+        string backupDir = string.Concat(mainDir, "/ImportBackups");
+        Directory.CreateDirectory(backupDir);
+
+        string date = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss");
+        string backupName = string.Concat(backupDir, _launcherDataInfo.Name, ".backup-", date);
+        File.Copy(_launcherData, backupName);
 
         // Write to file
-        using (var newFileStream = File.Open(_launcherDataPath, FileMode.Create))
+        using (var newFileStream = File.Open(_launcherData, FileMode.Create))
         {
             string serializedData = JsonConvert.SerializeObject(newModList);
             using var writer = new StreamWriter(newFileStream);
@@ -145,7 +157,7 @@ public partial class MainWindow
         }
     }
 
-    private static void DisplayMessage (string message)
+    private static void DisplayMessage(string message)
     {
         // TODO
     }

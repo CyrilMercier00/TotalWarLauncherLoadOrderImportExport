@@ -1,16 +1,18 @@
 ﻿using System;
 using System.IO;
-using Logging;
+using System.Runtime.InteropServices;
+using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace ImportExportInterface;
 
-internal static class Utils
+internal static class FileUtilities
 {
     private const string DefaultLauncherFolderPath = "\\The Creative Assembly\\Launcher\\";
     private const string DefaultLauncherDataFilename = "20190104-moddata.dat";
+    public static readonly Guid RoamingFolderGuid = new("374DE290-123F-4565-9164-39C4925E467B");
 
-    public static string FindLauncherDataPath (Logger? logger)
+    public static string FindLauncherDataPath(Logger.Logger? logger)
     {
         logger?.Log("Retrieving launcherDataPath");
 
@@ -26,9 +28,22 @@ internal static class Utils
         return string.Empty;
     }
 
-    public static string SelectFolder (string modalTitle, string startingDirectory)
+    public static string SelectFile(string modalTitle, string startingDirectory)
     {
-        var dlg = new CommonOpenFileDialog
+        var dialog = new OpenFileDialog
+        {
+            Filter = "Json files (*.json)|*.json|Text files (*.txt)|*.txt",
+            InitialDirectory = startingDirectory,
+            Title = modalTitle
+        };
+
+        dialog.ShowDialog();
+        return string.IsNullOrEmpty(dialog.FileName) ? string.Empty : dialog.FileName;
+    }
+
+    public static string SelectFolder(string modalTitle, string startingDirectory)
+    {
+        var dialogue = new CommonOpenFileDialog
         {
             AddToMostRecentlyUsedList = false,
             AllowNonFileSystemItems = false,
@@ -45,8 +60,11 @@ internal static class Utils
         };
 
         string? folder = string.Empty;
-        if (dlg.ShowDialog() == CommonFileDialogResult.Ok) folder = dlg.FileName;
+        if (dialogue.ShowDialog() == CommonFileDialogResult.Ok) folder = dialogue.FileName;
 
         return folder;
     }
+
+    [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
+    public static extern string SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken = 0);
 }

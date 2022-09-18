@@ -1,5 +1,4 @@
 ﻿using LauncherMiddleware.Models;
-using Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -9,13 +8,13 @@ public static class LauncherMethods
 
 {
     /// <summary>
-    /// Returns a file containing the load order for a game
+    /// Returns a stream containing the load order for a game
     /// </summary>
     /// <param name="gameName"></param>
     /// <param name="launcherDataPath"></param>
     /// <param name="logger"></param>
     /// <returns></returns>
-    public static MemoryStream CreateFile (GameName gameName, string launcherDataPath, Logger? logger)
+    public static MemoryStream ExportToStream(GameName gameName, string launcherDataPath, Logger.Logger? logger)
     {
         try
         {
@@ -23,8 +22,8 @@ public static class LauncherMethods
 
             var stream = File.Open(launcherDataPath, FileMode.Open);
             var mods = GetModsFromStream(stream, logger);
-            var filteredMods = mods.Where(mod => mod.Game == gameName && mod.Active).ToList();
-            var exportStream = CreateFile(filteredMods, logger);
+            var filteredMods = mods.Where(mod => mod.Game == gameName).ToList();
+            var exportStream = ExportToStream(filteredMods, logger);
 
             return exportStream;
         }
@@ -36,12 +35,12 @@ public static class LauncherMethods
     }
 
     /// <summary>
-    /// Returns a file containing the load order for a game
+    /// Returns a stream containing the load order for a game
     /// </summary>
     /// <param name="mods"></param>
     /// <param name="logger"></param>
     /// <returns></returns>
-    public static MemoryStream CreateFile (List<Mod> mods, Logger? logger)
+    public static MemoryStream ExportToStream(List<Mod> mods, Logger.Logger? logger)
     {
         logger?.Log($"Exporting mod data to stream for {mods.Count} mods");
         var stream = new MemoryStream();
@@ -55,6 +54,7 @@ public static class LauncherMethods
             string? modString = JsonConvert.SerializeObject(mods, options);
             var writer = new StreamWriter(stream);
             writer.Write(modString);
+            writer.Flush();
 
             return stream;
         }
@@ -67,10 +67,10 @@ public static class LauncherMethods
     }
 
     /// <summary>
-    /// Retrieve the contents of a file
+    /// Retrieve the contents of a file and parse it into a mod list
     /// </summary>
     /// <returns></returns>
-    public static IEnumerable<Mod> GetModsFromStream (Stream stream, Logger? logger)
+    public static List<Mod> GetModsFromStream(Stream stream, Logger.Logger? logger)
     {
         var extractedMods = new List<Mod>();
         var streamReader = new StreamReader(stream);
