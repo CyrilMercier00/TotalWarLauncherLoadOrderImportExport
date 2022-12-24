@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportExportInterface", "ImportExportInterface\ImportExportInterface.csproj", "{B5FB6C59-CD45-4D2A-BE90-ECA93A362DC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WarhammerLauncherTool", "WarhammerLauncherTool\WarhammerLauncherTool.csproj", "{B5FB6C59-CD45-4D2A-BE90-ECA93A362DC8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

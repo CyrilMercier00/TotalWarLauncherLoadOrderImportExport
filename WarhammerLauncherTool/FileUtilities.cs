@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using ImportExportInterface.Logging;
-using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using Serilog;
 
-namespace ImportExportInterface;
+namespace WarhammerLauncherTool;
 
 internal static class FileUtilities
 {
@@ -13,33 +12,22 @@ internal static class FileUtilities
     private const string DefaultLauncherDataFilename = "20190104-moddata.dat";
     public static readonly Guid RoamingFolderGuid = new("374DE290-123F-4565-9164-39C4925E467B");
 
-    public static string FindLauncherDataPath(Logger? logger)
+    private static readonly ILogger Logger = new LoggerConfiguration().WriteTo.File().CreateLogger();
+
+    public static string FindLauncherDataPath()
     {
-        logger?.Log("Retrieving launcherDataPath");
+        Logger.Information("Retrieving launcherDataPath");
 
         string? appdataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string? launcherFolder = appdataFolder + DefaultLauncherFolderPath;
-        string? path = launcherFolder + DefaultLauncherDataFilename;
+        string? launcherFolder = $"{appdataFolder}{DefaultLauncherFolderPath}";
+        string? path = $"{launcherFolder}{DefaultLauncherDataFilename}";
 
-        logger?.Log($"Launcher data path generated: {path}");
+        Logger.Information("Launcher data path generated: {Path}", path);
 
         if (File.Exists(path)) return path;
 
-        logger?.Log("Unable to find the file containing the launcher data");
+        Logger.Warning("Unable to find the file containing the launcher data");
         return string.Empty;
-    }
-
-    public static string SelectFile(string modalTitle, string startingDirectory)
-    {
-        var dialog = new OpenFileDialog
-        {
-            Filter = "Json files (*.json)|*.json|Text files (*.txt)|*.txt",
-            InitialDirectory = startingDirectory,
-            Title = modalTitle
-        };
-
-        dialog.ShowDialog();
-        return string.IsNullOrEmpty(dialog.FileName) ? string.Empty : dialog.FileName;
     }
 
     public static string SelectFolder(string modalTitle, string startingDirectory)

@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using ImportExportInterface.Class;
-using ImportExportInterface.Logging;
 using LauncherMiddleware.Models;
 using Newtonsoft.Json;
+using Serilog;
+using Serilog.Core;
+using WarhammerLauncherTool.Class;
 
-namespace ImportExportInterface;
+namespace WarhammerLauncherTool;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -26,8 +27,10 @@ public partial class MainWindow
         InitializeComponent();
 
         // Inintalize logginng
-        _logger = new Logger();
-        _logger.On();
+        _logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .WriteTo.File("logs/log-{Date}.txt", retainedFileCountLimit: 20)
+            .CreateLogger();
 
         // Get launcher data file
         _launcherData = FileUtilities.FindLauncherDataPath(_logger);
@@ -76,7 +79,7 @@ public partial class MainWindow
         // Select import file
         string dlFolder = FileUtilities.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
         DisplayMessage("Select the exported load order to import");
-        string savePath = FileUtilities.SelectFile("", dlFolder);
+        string savePath = Mod.SelectFile("", dlFolder);
         if (string.IsNullOrEmpty(savePath)) return;
 
         // Extract mods from file
