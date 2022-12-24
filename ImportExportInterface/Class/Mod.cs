@@ -1,12 +1,26 @@
-﻿using LauncherMiddleware.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using ImportExportInterface.Logging;
+using LauncherMiddleware.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace LauncherMiddleware;
+namespace ImportExportInterface.Class;
 
-public static class LauncherMethods
-
+public class Mod
 {
+    public string Uuid { get; set; }
+    public int Order { get; set; }
+    public bool Active { get; set; }
+    public GameName Game { get; set; }
+    public string PackFilePath { get; set; }
+    public string Name { get; set; }
+    public string Short { get; set; }
+    public string Category { get; set; }
+    public bool Owned { get; set; }
+
     /// <summary>
     /// Returns a stream containing the load order for a game
     /// </summary>
@@ -14,7 +28,7 @@ public static class LauncherMethods
     /// <param name="launcherDataPath"></param>
     /// <param name="logger"></param>
     /// <returns></returns>
-    public static MemoryStream ExportToStream(GameName gameName, string launcherDataPath, Logger.Logger? logger)
+    public static MemoryStream ExportToStream(GameName gameName, string launcherDataPath, Logger? logger)
     {
         try
         {
@@ -40,7 +54,7 @@ public static class LauncherMethods
     /// <param name="mods"></param>
     /// <param name="logger"></param>
     /// <returns></returns>
-    public static MemoryStream ExportToStream(List<Mod> mods, Logger.Logger? logger)
+    public static MemoryStream ExportToStream(List<Mod> mods, Logger? logger)
     {
         logger?.Log($"Exporting mod data to stream for {mods.Count} mods");
         var stream = new MemoryStream();
@@ -70,7 +84,7 @@ public static class LauncherMethods
     /// Retrieve the contents of a file and parse it into a mod list
     /// </summary>
     /// <returns></returns>
-    public static List<Mod> GetModsFromStream(Stream stream, Logger.Logger? logger)
+    public static List<Mod> GetModsFromStream(Stream stream, Logger? logger)
     {
         var extractedMods = new List<Mod>();
         var streamReader = new StreamReader(stream);
@@ -84,8 +98,14 @@ public static class LauncherMethods
             while (reader.Read())
             {
                 var data = serializer.Deserialize<List<Mod>>(reader);
-                if (data is null) { logger?.Log("No mods were deserialized !"); }
-                else { extractedMods.AddRange(data); }
+                if (data is null)
+                {
+                    logger?.Log("No mods were deserialized !");
+                }
+                else
+                {
+                    extractedMods.AddRange(data);
+                }
             }
         }
 

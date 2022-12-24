@@ -1,6 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
-namespace Logger;
+namespace ImportExportInterface.Logging;
 
 public class Logger
 {
@@ -42,7 +47,7 @@ public class Logger
         var stream = File.Open(fileName, FileMode.Append);
         using var streamWriter = new StreamWriter(stream);
 
-        streamWriter.WriteLine(DateTime.Now);
+        streamWriter.WriteLine(DateTime.Now.ToString(CultureInfo.InvariantCulture));
         if (!string.IsNullOrEmpty(message)) streamWriter.WriteLine(message);
         if (e is not null) streamWriter.WriteLine(e.InnerException);
         streamWriter.WriteLine();

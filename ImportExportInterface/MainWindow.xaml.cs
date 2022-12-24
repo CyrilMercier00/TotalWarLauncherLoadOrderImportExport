@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using LauncherMiddleware;
+using ImportExportInterface.Class;
+using ImportExportInterface.Logging;
 using LauncherMiddleware.Models;
 using Newtonsoft.Json;
 
@@ -18,14 +19,14 @@ public partial class MainWindow
     private const GameName SelectedGame = GameName.warhammer3; // TODO : Implement game selection
     private readonly string _launcherData;
     private readonly FileInfo _launcherDataInfo;
-    private readonly Logger.Logger _logger;
+    private readonly Logger _logger;
 
     public MainWindow()
     {
         InitializeComponent();
 
         // Inintalize logginng
-        _logger = new Logger.Logger();
+        _logger = new Logger();
         _logger.On();
 
         // Get launcher data file
@@ -55,7 +56,7 @@ public partial class MainWindow
         string savePath = FileUtilities.SelectFolder("", dlFolder);
         if (string.IsNullOrEmpty(savePath)) return;
 
-        var stream = LauncherMethods.ExportToStream(SelectedGame, _launcherData, _logger);
+        var stream = Mod.ExportToStream(SelectedGame, _launcherData, _logger);
         var fileStream = File.Create(savePath + ExportFileName);
 
         stream.Position = 0;
@@ -82,7 +83,7 @@ public partial class MainWindow
         var importedMods = new List<Mod>();
         using (var stream = File.Open(savePath, FileMode.Open))
         {
-            var mods = LauncherMethods.GetModsFromStream(stream, _logger);
+            var mods = Mod.GetModsFromStream(stream, _logger);
             if (!mods.Any())
             {
                 DisplayMessage("No mods could be found in the selected file");
@@ -98,7 +99,7 @@ public partial class MainWindow
 
         // Retrieve existing mods
         using var fileStream = File.Open(_launcherData, FileMode.Open);
-        var launcherModsConfig = LauncherMethods.GetModsFromStream(fileStream, _logger);
+        var launcherModsConfig = Mod.GetModsFromStream(fileStream, _logger);
 
         // Filter out other games
         var isForCurrentGame = launcherModsConfig.ToLookup(mod => mod.Game == SelectedGame);
