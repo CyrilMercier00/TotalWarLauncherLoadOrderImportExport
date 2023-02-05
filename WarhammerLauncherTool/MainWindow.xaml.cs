@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using LauncherMiddleware.Models;
 using Newtonsoft.Json;
 using Serilog;
-using Serilog.Core;
-using WarhammerLauncherTool.Class;
+using WarhammerLauncherTool.Commands.Implementations.FileCommands;
+using WarhammerLauncherTool.Commands.Implementations.ModComands.GetModFromStream;
+using WarhammerLauncherTool.Commands.Implementations.ModComands.GetModsFromFile;
+using WarhammerLauncherTool.Models;
 
 namespace WarhammerLauncherTool;
 
@@ -17,23 +18,36 @@ namespace WarhammerLauncherTool;
 public partial class MainWindow
 {
     private const string ExportFileName = "\\loadOrder.json";
-    private const GameName SelectedGame = GameName.warhammer3; // TODO : Implement game selection
+    private const GameName SelectedGame = GameName.Warhammer3; // TODO : Implement game selection
     private readonly string _launcherData;
     private readonly FileInfo _launcherDataInfo;
-    private readonly Logger _logger;
 
-    public MainWindow()
+    private readonly ILogger _logger;
+
+    private readonly ISelectFile _selectFile;
+    private readonly IGetModsFromLauncherData _getModsFromLauncherData;
+    private readonly IGetModFromStream _getModsFromStream;
+
+    public MainWindow(
+        ILogger logger,
+        ISelectFile selectFile,
+        IGetModFromStream getModsFromStream,
+        IGetModsFromLauncherData getModsFromLauncherData)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        // Static class logger
+        FileUtilities.Logger = _logger;
+
+        // Initalize all commands
+        _selectFile = selectFile ?? throw new ArgumentNullException(nameof(selectFile));
+        _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
+        _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
+
         InitializeComponent();
 
-        // Inintalize logginng
-        _logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
-            .WriteTo.File("logs/log-{Date}.txt", retainedFileCountLimit: 20)
-            .CreateLogger();
-
         // Get launcher data file
-        _launcherData = FileUtilities.FindLauncherDataPath(_logger);
+        _launcherData = FileUtilities.FindLauncherDataPath();
 
         // Ask to select the launcher data folder if it wasn't found
         if (string.IsNullOrEmpty(_launcherData))
@@ -59,7 +73,8 @@ public partial class MainWindow
         string savePath = FileUtilities.SelectFolder("", dlFolder);
         if (string.IsNullOrEmpty(savePath)) return;
 
-        var stream = Mod.ExportToStream(SelectedGame, _launcherData, _logger);
+        var param = new GetModsFromLauncherDataParameter { Name = SelectedGame, FilePath = _launcherData };
+        var stream = _getModsFromLauncherData.Execute(param);
         var fileStream = File.Create(savePath + ExportFileName);
 
         stream.Position = 0;
@@ -77,16 +92,19 @@ public partial class MainWindow
     private void ButtonImport_Click(object sender, RoutedEventArgs e)
     {
         // Select import file
-        string dlFolder = FileUtilities.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
         DisplayMessage("Select the exported load order to import");
-        string savePath = Mod.SelectFile("", dlFolder);
+
+        string dlFolder = FileUtilities.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
+        var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = dlFolder };
+        string savePath = _selectFile.Execute(parameters);
+
         if (string.IsNullOrEmpty(savePath)) return;
 
         // Extract mods from file
         var importedMods = new List<Mod>();
         using (var stream = File.Open(savePath, FileMode.Open))
         {
-            var mods = Mod.GetModsFromStream(stream, _logger);
+            var mods = _getModsFromStream.Execute(stream);
             if (!mods.Any())
             {
                 DisplayMessage("No mods could be found in the selected file");
@@ -102,7 +120,7 @@ public partial class MainWindow
 
         // Retrieve existing mods
         using var fileStream = File.Open(_launcherData, FileMode.Open);
-        var launcherModsConfig = Mod.GetModsFromStream(fileStream, _logger);
+        var launcherModsConfig = _getModsFromStream.Execute(fileStream);
 
         // Filter out other games
         var isForCurrentGame = launcherModsConfig.ToLookup(mod => mod.Game == SelectedGame);

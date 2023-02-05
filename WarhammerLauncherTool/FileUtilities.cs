@@ -12,15 +12,15 @@ internal static class FileUtilities
     private const string DefaultLauncherDataFilename = "20190104-moddata.dat";
     public static readonly Guid RoamingFolderGuid = new("374DE290-123F-4565-9164-39C4925E467B");
 
-    private static readonly ILogger Logger = new LoggerConfiguration().WriteTo.File().CreateLogger();
+    public static ILogger Logger { get; set; }
 
     public static string FindLauncherDataPath()
     {
         Logger.Information("Retrieving launcherDataPath");
 
-        string? appdataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string? launcherFolder = $"{appdataFolder}{DefaultLauncherFolderPath}";
-        string? path = $"{launcherFolder}{DefaultLauncherDataFilename}";
+        string appdataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string launcherFolder = $"{appdataFolder}{DefaultLauncherFolderPath}";
+        string path = $"{launcherFolder}{DefaultLauncherDataFilename}";
 
         Logger.Information("Launcher data path generated: {Path}", path);
 
