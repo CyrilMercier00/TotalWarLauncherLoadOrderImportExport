@@ -1,4 +1,4 @@
-﻿namespace WarhammerLauncherTool.Commands.Implementations.FileCommands;
+﻿namespace WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 
 public class SelectFileParameters
 {

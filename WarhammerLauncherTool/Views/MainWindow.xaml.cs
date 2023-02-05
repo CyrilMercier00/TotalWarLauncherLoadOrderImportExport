@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Newtonsoft.Json;
 using Serilog;
-using WarhammerLauncherTool.Commands.Implementations.FileCommands;
-using WarhammerLauncherTool.Commands.Implementations.ModComands.GetModFromStream;
-using WarhammerLauncherTool.Commands.Implementations.ModComands.GetModsFromFile;
+using WarhammerLauncherTool.Commands.Implementations.File_related.FindLauncherDataPath;
+using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
+using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
+using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
+using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
 using WarhammerLauncherTool.Models;
 
 namespace WarhammerLauncherTool;
@@ -25,36 +28,41 @@ public partial class MainWindow
     private readonly ILogger _logger;
 
     private readonly ISelectFile _selectFile;
-    private readonly IGetModsFromLauncherData _getModsFromLauncherData;
+    private readonly ISelectFolder _selectFolder;
     private readonly IGetModFromStream _getModsFromStream;
+    private readonly IFindLauncherDataPath _findLauncherDataPath;
+    private readonly IGetModsFromLauncherData _getModsFromLauncherData;
 
     public MainWindow(
         ILogger logger,
         ISelectFile selectFile,
+        ISelectFolder selectFolder,
         IGetModFromStream getModsFromStream,
+        IFindLauncherDataPath findLauncherDataPath,
         IGetModsFromLauncherData getModsFromLauncherData)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        // Static class logger
-        FileUtilities.Logger = _logger;
-
         // Initalize all commands
         _selectFile = selectFile ?? throw new ArgumentNullException(nameof(selectFile));
+        _selectFolder = selectFolder ?? throw new ArgumentNullException(nameof(selectFolder));
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
+        _findLauncherDataPath = findLauncherDataPath ?? throw new ArgumentNullException(nameof(findLauncherDataPath));
         _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
 
         InitializeComponent();
 
         // Get launcher data file
-        _launcherData = FileUtilities.FindLauncherDataPath();
+        _launcherData = _findLauncherDataPath.Execute();
 
-        // Ask to select the launcher data folder if it wasn't found
+        // Ask to select the launcher data folder if it was not found
         if (string.IsNullOrEmpty(_launcherData))
         {
             string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             DisplayMessage("Select the folder containing the data for the launcher");
-            string folder = FileUtilities.SelectFolder("", roaming);
+
+            var parameters = new SelectFolderParameters { ModalTitle = string.Empty, StartingDirectory = roaming };
+            string folder = _selectFolder.Execute(parameters);
             _launcherData = folder;
         }
 
@@ -68,9 +76,12 @@ public partial class MainWindow
     /// <param name="e"></param>
     private void ButtonExport_Click(object sender, RoutedEventArgs e)
     {
-        string dlFolder = FileUtilities.SHGetKnownFolderPath(FileUtilities.RoamingFolderGuid, 0);
         DisplayMessage("Select the folder where the file will be saved");
-        string savePath = FileUtilities.SelectFolder("", dlFolder);
+
+        string dlFolder = SHGetKnownFolderPath(Constants.RoamingFolderGuid, 0);
+        var parameters = new SelectFolderParameters { ModalTitle = string.Empty, StartingDirectory = dlFolder };
+        string savePath = _selectFolder.Execute(parameters);
+
         if (string.IsNullOrEmpty(savePath)) return;
 
         var param = new GetModsFromLauncherDataParameter { Name = SelectedGame, FilePath = _launcherData };
@@ -94,7 +105,7 @@ public partial class MainWindow
         // Select import file
         DisplayMessage("Select the exported load order to import");
 
-        string dlFolder = FileUtilities.SHGetKnownFolderPath(new Guid("374DE290-123F-4565-9164-39C4925E467B"), 0);
+        string dlFolder = SHGetKnownFolderPath(Constants.RoamingFolderGuid, 0);
         var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = dlFolder };
         string savePath = _selectFile.Execute(parameters);
 
@@ -183,4 +194,7 @@ public partial class MainWindow
     {
         // TODO
     }
+
+    [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
+    public static extern string SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken = 0);
 }

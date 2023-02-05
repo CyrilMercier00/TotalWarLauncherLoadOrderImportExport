@@ -1,9 +1,20 @@
-﻿namespace WarhammerLauncherTool;
+﻿using System.Windows;
+using Autofac;
+
+namespace WarhammerLauncherTool;
 
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>
 public partial class App
 {
-    public App() { AutofacImplementation.Initialize(); }
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        var container = AutofacContainer.Initialize();
+        using (var scope = container.BeginLifetimeScope())
+        {
+            var mainWindow = scope.Resolve<MainWindow>();
+            mainWindow.Show();
+        }
+    }
 }

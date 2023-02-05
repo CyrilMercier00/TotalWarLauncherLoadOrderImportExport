@@ -2,7 +2,7 @@
 using Microsoft.Win32;
 using Serilog;
 
-namespace WarhammerLauncherTool.Commands.Implementations.FileCommands;
+namespace WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 
 public class SelectFile : ISelectFile
 {

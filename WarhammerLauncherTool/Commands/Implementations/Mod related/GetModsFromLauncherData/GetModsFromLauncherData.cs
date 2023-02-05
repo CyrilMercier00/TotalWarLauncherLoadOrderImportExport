@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 using Serilog;
-using WarhammerLauncherTool.Commands.Implementations.ModComands.GetModFromStream;
-using WarhammerLauncherTool.Commands.Implementations.ModComands.ModListToStream;
+using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
+using WarhammerLauncherTool.Commands.Implementations.Mod_related.ModListToStream;
 
-namespace WarhammerLauncherTool.Commands.Implementations.ModComands.GetModsFromFile;
+namespace WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
 
 public class GetModsFromLauncherData : IGetModsFromLauncherData
 {

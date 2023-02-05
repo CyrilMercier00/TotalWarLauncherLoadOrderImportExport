@@ -6,7 +6,7 @@ using Newtonsoft.Json.Converters;
 using Serilog;
 using WarhammerLauncherTool.Models;
 
-namespace WarhammerLauncherTool.Commands.Implementations.ModComands.ModListToStream;
+namespace WarhammerLauncherTool.Commands.Implementations.Mod_related.ModListToStream;
 
 public class ModListToStream : IModListToStream
 {

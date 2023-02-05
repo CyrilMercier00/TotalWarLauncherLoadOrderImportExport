@@ -1,6 +1,6 @@
 ﻿using WarhammerLauncherTool.Models;
 
-namespace WarhammerLauncherTool.Commands.Implementations.ModComands.GetModsFromFile;
+namespace WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
 
 public class GetModsFromLauncherDataParameter
 {
