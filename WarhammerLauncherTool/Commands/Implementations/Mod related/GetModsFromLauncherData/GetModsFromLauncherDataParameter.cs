@@ -4,6 +4,6 @@ namespace WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFrom
 
 public class GetModsFromLauncherDataParameter
 {
-    public GameName Name { get; set; }
-    public string FilePath { get; set; }
+    public required GameName GameName { get; init; }
+    public required string FilePath { get; init; }
 }

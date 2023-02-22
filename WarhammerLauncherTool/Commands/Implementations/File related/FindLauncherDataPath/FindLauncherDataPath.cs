@@ -8,7 +8,7 @@ public class FindLauncherDataPath : IFindLauncherDataPath
 {
     private readonly ILogger _logger;
 
-    private const string DefaultLauncherFolderPath = "\\The Creative Assembly\\Launcher\\";
+    private const string DefaultLauncherFolderPath = @"\The Creative Assembly\Launcher\";
     private const string DefaultLauncherDataFilename = "20190104-moddata.dat";
 
     public FindLauncherDataPath(ILogger logger) { _logger = logger ?? throw new ArgumentNullException(nameof(logger)); }

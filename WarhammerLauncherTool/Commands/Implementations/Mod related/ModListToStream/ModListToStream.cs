@@ -10,17 +10,20 @@ namespace WarhammerLauncherTool.Commands.Implementations.Mod_related.ModListToSt
 
 public class ModListToStream : IModListToStream
 {
-    private static ILogger Logger { get; set; }
+    public required ILogger _logger { get; init; }
 
-    private static JsonSerializerSettings? _jsonSerializerSettings;
+    private JsonSerializerSettings? _jsonSerializerSettings;
 
-    private static JsonSerializerSettings JsonSerializerSettings =>
-        _jsonSerializerSettings ??= new JsonSerializerSettings
+    private JsonSerializerSettings JsonSerializerSettings
+    {
+        get
         {
-            Converters = { new StringEnumConverter() }
-        };
-
-    public ModListToStream(ILogger logger) { Logger = logger ?? throw new ArgumentNullException(nameof(logger)); }
+            return _jsonSerializerSettings ??= new JsonSerializerSettings
+            {
+                Converters = { new StringEnumConverter() }
+            };
+        }
+    }
 
     public MemoryStream Execute(List<Mod> mods)
     {
@@ -37,7 +40,7 @@ public class ModListToStream : IModListToStream
         catch (Exception e)
         {
             stream.Dispose();
-            Logger.Error(e, "An error has occured while exporting {Count} mods", mods.Count);
+            _logger.Error(e, "An error has occured while exporting {Count} mods", mods.Count);
             throw;
         }
     }

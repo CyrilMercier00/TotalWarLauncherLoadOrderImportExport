@@ -26,14 +26,14 @@ public class GetModsFromLauncherData : IGetModsFromLauncherData
         {
             var stream = File.Open(parameters.FilePath, FileMode.Open);
             var mods = GetModFromStream.Execute(stream);
-            var filteredMods = mods.Where(mod => mod.Game == parameters.Name).ToList();
+            var filteredMods = mods.Where(mod => mod.Game == parameters.GameName).ToList();
             var exportStream = ModListToStream.Execute(filteredMods);
 
             return exportStream;
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Unable to retrieve mods from file. GameName is {Name} and filepath is {Path}", parameters.Name, parameters.FilePath);
+            Logger.Error(e, "Unable to retrieve mods from file. GameName is {Name} and filepath is {Path}", parameters.GameName, parameters.FilePath);
             throw;
         }
     }

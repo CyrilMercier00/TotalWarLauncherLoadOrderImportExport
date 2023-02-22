@@ -7,6 +7,7 @@ using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
+using WarhammerLauncherTool.Commands.Implementations.Steam_related.GetModFromStream;
 
 namespace WarhammerLauncherTool;
 
@@ -25,6 +26,9 @@ public static class AutofacContainer
         builder.RegisterAssemblyTypes(assemblies)
             .AsClosedTypesOf(typeof(ICommand<,>));
 
+        builder.RegisterAssemblyTypes(assemblies)
+            .AsClosedTypesOf(typeof(ICommandAsync<>));
+
         // Serilog
         builder.Register<ILogger>((_, _) =>
             new LoggerConfiguration()
@@ -41,8 +45,9 @@ public static class AutofacContainer
                 context.Resolve<ISelectFolder>(),
                 context.Resolve<IGetModFromStream>(),
                 context.Resolve<IFindLauncherDataPath>(),
-                context.Resolve<IGetModsFromLauncherData>())
-        ).SingleInstance();
+                context.Resolve<IGetModsFromLauncherData>(),
+                context.Resolve<ISubscribeToWorkshopItems>()
+            )).SingleInstance();
 
         return builder.Build();
     }

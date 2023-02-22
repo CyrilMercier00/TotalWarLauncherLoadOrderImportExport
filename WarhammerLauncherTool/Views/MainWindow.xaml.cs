@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows;
 using Newtonsoft.Json;
 using Serilog;
@@ -11,6 +10,7 @@ using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
+using WarhammerLauncherTool.Commands.Implementations.Steam_related.GetModFromStream;
 using WarhammerLauncherTool.Models;
 
 namespace WarhammerLauncherTool;
@@ -20,18 +20,22 @@ namespace WarhammerLauncherTool;
 /// </summary>
 public partial class MainWindow
 {
-    private const string ExportFileName = "\\loadOrder.json";
-    private const GameName SelectedGame = GameName.Warhammer3; // TODO : Implement game selection
-    private readonly string _launcherData;
+    private const string ExportFileName = @"\ExportedLoadOrder.json";
+
+    private readonly GameName SelectedGame = GameName.Warhammer3; // TODO : Implement game selection
     private readonly FileInfo _launcherDataInfo;
 
-    private readonly ILogger _logger;
+    private readonly string _desktopFolder;
+    private readonly string _launcherData;
 
     private readonly ISelectFile _selectFile;
     private readonly ISelectFolder _selectFolder;
     private readonly IGetModFromStream _getModsFromStream;
+    private readonly ISubscribeToWorkshopItems _subscribeToMods;
     private readonly IFindLauncherDataPath _findLauncherDataPath;
     private readonly IGetModsFromLauncherData _getModsFromLauncherData;
+
+    private readonly ILogger _logger;
 
     public MainWindow(
         ILogger logger,
@@ -39,7 +43,8 @@ public partial class MainWindow
         ISelectFolder selectFolder,
         IGetModFromStream getModsFromStream,
         IFindLauncherDataPath findLauncherDataPath,
-        IGetModsFromLauncherData getModsFromLauncherData)
+        IGetModsFromLauncherData getModsFromLauncherData,
+        ISubscribeToWorkshopItems subscribeToWorkshopItems)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -49,21 +54,23 @@ public partial class MainWindow
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
         _findLauncherDataPath = findLauncherDataPath ?? throw new ArgumentNullException(nameof(findLauncherDataPath));
         _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
+        _subscribeToMods = subscribeToWorkshopItems ?? throw new ArgumentNullException(nameof(subscribeToWorkshopItems));
 
         InitializeComponent();
 
-        // Get launcher data file
         _launcherData = _findLauncherDataPath.Execute();
+        _desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-        // Ask to select the launcher data folder if it was not found
+        // Ask to manually select the launcher data folder if it was not found
         if (string.IsNullOrEmpty(_launcherData))
         {
-            string roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            DisplayMessage("Select the folder containing the data for the launcher");
+            DisplayMessage("Select the file containing the data for the launcher. The file you are looking for is named loadOrder.json");
 
-            var parameters = new SelectFolderParameters { ModalTitle = string.Empty, StartingDirectory = roaming };
-            string folder = _selectFolder.Execute(parameters);
-            _launcherData = folder;
+            string roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = roamingFolder };
+            string path = _selectFile.Execute(parameters);
+
+            _launcherData = path;
         }
 
         _launcherDataInfo = new FileInfo(_launcherData);
@@ -78,13 +85,12 @@ public partial class MainWindow
     {
         DisplayMessage("Select the folder where the file will be saved");
 
-        string dlFolder = SHGetKnownFolderPath(Constants.RoamingFolderGuid, 0);
-        var parameters = new SelectFolderParameters { ModalTitle = string.Empty, StartingDirectory = dlFolder };
+        var parameters = new SelectFolderParameters { ModalTitle = string.Empty, StartingDirectory = _desktopFolder };
         string savePath = _selectFolder.Execute(parameters);
 
         if (string.IsNullOrEmpty(savePath)) return;
 
-        var param = new GetModsFromLauncherDataParameter { Name = SelectedGame, FilePath = _launcherData };
+        var param = new GetModsFromLauncherDataParameter { GameName = SelectedGame, FilePath = _launcherData };
         var stream = _getModsFromLauncherData.Execute(param);
         var fileStream = File.Create(savePath + ExportFileName);
 
@@ -105,8 +111,7 @@ public partial class MainWindow
         // Select import file
         DisplayMessage("Select the exported load order to import");
 
-        string dlFolder = SHGetKnownFolderPath(Constants.RoamingFolderGuid, 0);
-        var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = dlFolder };
+        var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = _desktopFolder };
         string savePath = _selectFile.Execute(parameters);
 
         if (string.IsNullOrEmpty(savePath)) return;
@@ -143,10 +148,8 @@ public partial class MainWindow
         var notDownloaded = modsForCurrentGame.Where(existingMod => importedMods.Any(importedMod => importedMod.Uuid != existingMod.Uuid)).ToList();
 
         // Subscribe to missing mods
-        foreach (var mod in notDownloaded)
-        {
-            // TODO 
-        }
+        ulong[] modUuids = notDownloaded.Select(m => m.workshopUid).ToArray();
+        _subscribeToMods.ExecuteAsync(modUuids); // TODO : Pass non subbed items instead
 
         // Update mods that were already downloaded
         foreach (var mod in alreadyDownloaded)
@@ -194,7 +197,4 @@ public partial class MainWindow
     {
         // TODO
     }
-
-    [DllImport("shell32", CharSet = CharSet.Unicode, ExactSpelling = true, PreserveSig = false)]
-    public static extern string SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, nint hToken = 0);
 }

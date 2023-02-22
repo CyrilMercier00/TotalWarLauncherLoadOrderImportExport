@@ -2,6 +2,6 @@
 
 public class SelectFileParameters
 {
-    public string ModalTitle { get; set; }
-    public string StartingDirectory { get; set; }
+    public required string ModalTitle { get; init; }
+    public required string StartingDirectory { get; init; }
 }
