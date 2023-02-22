@@ -4,6 +4,11 @@ namespace WarhammerLauncherTool.Commands.Implementations.File_related.SelectFold
 
 public class SelectFolder : ISelectFolder
 {
+    /// <summary>
+    /// This method is used to open a Windows dialogue box for the user to select a folder.
+    /// </summary>
+    /// <param name="parameters"></param>
+    /// <returns>The selected folder fullpath as a string.</returns>
     public string Execute(SelectFolderParameters parameters)
     {
         var dialogue = new CommonOpenFileDialog
