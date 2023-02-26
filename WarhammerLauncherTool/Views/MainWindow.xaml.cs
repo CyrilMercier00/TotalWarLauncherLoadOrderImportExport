@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using Newtonsoft.Json;
 using Serilog;
 using WarhammerLauncherTool.Commands.Implementations.File_related.FindLauncherDataPath;
+using WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
-using WarhammerLauncherTool.Commands.Implementations.Steam_related.GetModFromStream;
+using WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
 using WarhammerLauncherTool.Models;
 
-namespace WarhammerLauncherTool;
+namespace WarhammerLauncherTool.Views;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml
@@ -30,6 +30,7 @@ public partial class MainWindow
 
     private readonly ISelectFile _selectFile;
     private readonly ISelectFolder _selectFolder;
+    private readonly ISaveModsToFile _saveModsToFile;
     private readonly IGetModFromStream _getModsFromStream;
     private readonly ISubscribeToWorkshopItems _subscribeToMods;
     private readonly IFindLauncherDataPath _findLauncherDataPath;
@@ -41,6 +42,7 @@ public partial class MainWindow
         ILogger logger,
         ISelectFile selectFile,
         ISelectFolder selectFolder,
+        ISaveModsToFile saveModsToFile,
         IGetModFromStream getModsFromStream,
         IFindLauncherDataPath findLauncherDataPath,
         IGetModsFromLauncherData getModsFromLauncherData,
@@ -51,6 +53,7 @@ public partial class MainWindow
         // Initalize all commands
         _selectFile = selectFile ?? throw new ArgumentNullException(nameof(selectFile));
         _selectFolder = selectFolder ?? throw new ArgumentNullException(nameof(selectFolder));
+        _saveModsToFile = saveModsToFile ?? throw new ArgumentNullException(nameof(saveModsToFile));
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
         _findLauncherDataPath = findLauncherDataPath ?? throw new ArgumentNullException(nameof(findLauncherDataPath));
         _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
@@ -64,8 +67,6 @@ public partial class MainWindow
         // Ask to manually select the launcher data folder if it was not found
         if (string.IsNullOrEmpty(_launcherData))
         {
-            DisplayMessage("Select the file containing the data for the launcher. The file you are looking for is named loadOrder.json");
-
             string roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = roamingFolder };
             string path = _selectFile.Execute(parameters);
@@ -83,8 +84,6 @@ public partial class MainWindow
     /// <param name="e"></param>
     private void ButtonExport_Click(object sender, RoutedEventArgs e)
     {
-        DisplayMessage("Select the folder where the file will be saved");
-
         var parameters = new SelectFolderParameters { ModalTitle = string.Empty, StartingDirectory = _desktopFolder };
         string savePath = _selectFolder.Execute(parameters);
 
@@ -109,8 +108,6 @@ public partial class MainWindow
     private void ButtonImport_Click(object sender, RoutedEventArgs e)
     {
         // Select import file
-        DisplayMessage("Select the exported load order to import");
-
         var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = _desktopFolder };
         string savePath = _selectFile.Execute(parameters);
 
@@ -121,11 +118,7 @@ public partial class MainWindow
         using (var stream = File.Open(savePath, FileMode.Open))
         {
             var mods = _getModsFromStream.Execute(stream);
-            if (!mods.Any())
-            {
-                DisplayMessage("No mods could be found in the selected file");
-                return;
-            }
+            if (!mods.Any()) return;
 
             importedMods.AddRange(mods);
         }
@@ -183,18 +176,8 @@ public partial class MainWindow
         string backupName = string.Concat(backupDir, _launcherDataInfo.Name, ".backup-", date);
         File.Copy(_launcherData, backupName);
 
-        // Write to file
-        using (var newFileStream = File.Open(_launcherData, FileMode.Create))
-        {
-            string serializedData = JsonConvert.SerializeObject(newModList);
-            using var writer = new StreamWriter(newFileStream);
-            writer.Write(serializedData);
-            writer.Close();
-        }
-    }
-
-    private static void DisplayMessage(string message)
-    {
-        // TODO
+        // Save to file
+        var saveToFileParameters = new SaveModsToFileParameters { mods = newModList, savePath = _launcherData };
+        _saveModsToFile.Execute(saveToFileParameters);
     }
 }
