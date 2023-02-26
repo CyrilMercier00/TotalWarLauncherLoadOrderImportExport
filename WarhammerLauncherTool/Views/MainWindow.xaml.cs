@@ -32,9 +32,10 @@ public partial class MainWindow
     private readonly ISelectFolder _selectFolder;
     private readonly ISaveModsToFile _saveModsToFile;
     private readonly IGetModFromStream _getModsFromStream;
-    private readonly ISubscribeToWorkshopItems _subscribeToMods;
     private readonly IFindLauncherDataPath _findLauncherDataPath;
+    private readonly IGetSteamWorkshopItems _getSteamWorkshopItems;
     private readonly IGetModsFromLauncherData _getModsFromLauncherData;
+    private readonly ISubscribeToWorkshopItems _subscribeToWorkshopItems;
 
     private readonly ILogger _logger;
 
@@ -45,6 +46,7 @@ public partial class MainWindow
         ISaveModsToFile saveModsToFile,
         IGetModFromStream getModsFromStream,
         IFindLauncherDataPath findLauncherDataPath,
+        IGetSteamWorkshopItems getSteamWorkshopItems,
         IGetModsFromLauncherData getModsFromLauncherData,
         ISubscribeToWorkshopItems subscribeToWorkshopItems)
     {
@@ -56,8 +58,9 @@ public partial class MainWindow
         _saveModsToFile = saveModsToFile ?? throw new ArgumentNullException(nameof(saveModsToFile));
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
         _findLauncherDataPath = findLauncherDataPath ?? throw new ArgumentNullException(nameof(findLauncherDataPath));
+        _getSteamWorkshopItems = getSteamWorkshopItems ?? throw new ArgumentNullException(nameof(getSteamWorkshopItems));
         _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
-        _subscribeToMods = subscribeToWorkshopItems ?? throw new ArgumentNullException(nameof(subscribeToWorkshopItems));
+        _subscribeToWorkshopItems = subscribeToWorkshopItems ?? throw new ArgumentNullException(nameof(subscribeToWorkshopItems));
 
         InitializeComponent();
 
@@ -105,7 +108,7 @@ public partial class MainWindow
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    private void ButtonImport_Click(object sender, RoutedEventArgs e)
+    private async void ButtonImport_Click(object sender, RoutedEventArgs e)
     {
         // Select import file
         var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = _desktopFolder };
@@ -115,7 +118,7 @@ public partial class MainWindow
 
         // Extract mods from file
         var importedMods = new List<Mod>();
-        using (var stream = File.Open(savePath, FileMode.Open))
+        await using (var stream = File.Open(savePath, FileMode.Open))
         {
             var mods = _getModsFromStream.Execute(stream);
             if (!mods.Any()) return;
@@ -128,7 +131,7 @@ public partial class MainWindow
         for (int i = 0; i < importedMods.Count; i++) importedMods[i].Order = i;
 
         // Retrieve existing mods
-        using var fileStream = File.Open(_launcherData, FileMode.Open);
+        await using var fileStream = File.Open(_launcherData, FileMode.Open);
         var launcherModsConfig = _getModsFromStream.Execute(fileStream);
 
         // Filter out other games
@@ -136,21 +139,15 @@ public partial class MainWindow
         var modsForCurrentGame = isForCurrentGame[true].ToList();
         var modsForOtherGames = isForCurrentGame[false].ToList();
 
-        // Separate mods that are in the import but are not downloaded
-        var alreadyDownloaded = modsForCurrentGame.Where(existingMod => importedMods.Any(importedMod => importedMod.Uuid == existingMod.Uuid)).ToList();
-        var notDownloaded = modsForCurrentGame.Where(existingMod => importedMods.Any(importedMod => importedMod.Uuid != existingMod.Uuid)).ToList();
+        // Login to steam account
+        // TODO
+
+        // Get mods that the user is not subscribed to
+        var uids = modsForCurrentGame.Select(mod => mod.workshopUid).ToList();
+        var workshopItems = await _getSteamWorkshopItems.ExecuteAsync(uids).ConfigureAwait(false);
 
         // Subscribe to missing mods
-        ulong[] modUuids = notDownloaded.Select(m => m.workshopUid).ToArray();
-        _subscribeToMods.ExecuteAsync(modUuids); // TODO : Pass non subbed items instead
-
-        // Update mods that were already downloaded
-        foreach (var mod in alreadyDownloaded)
-        {
-            var importedMod = importedMods.Single(m => m.Uuid == mod.Uuid);
-            mod.Active = importedMod.Active;
-            mod.Order = importedMod.Order;
-        }
+        await _subscribeToWorkshopItems.ExecuteAsync(workshopItems).ConfigureAwait(false);
 
         // Filter out mods that are installed but not present in the import
         var modsNotInImport = modsForCurrentGame.Where(mod => importedMods.Exists(existingMod => existingMod.Uuid == mod.Uuid)).OrderBy(mods => mods.Order).ToList();
@@ -162,10 +159,9 @@ public partial class MainWindow
 
         // Build new modList
         var newModList = new List<Mod>();
-        newModList.AddRange(alreadyDownloaded);
-        newModList.AddRange(notDownloaded);
-        newModList.AddRange(modsNotInImport);
+        newModList.AddRange(modsForCurrentGame);
         newModList.AddRange(modsForOtherGames);
+        newModList.AddRange(modsNotInImport);
 
         // Backup old config
         string mainDir = _launcherDataInfo.Directory!.FullName;

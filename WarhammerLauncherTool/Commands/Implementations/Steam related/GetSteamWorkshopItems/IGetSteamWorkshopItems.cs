@@ -3,4 +3,4 @@ using Steamworks.Ugc;
 
 namespace WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
 
-public interface ISubscribeToWorkshopItems : ICommandAsync<List<Item>> {}
+public interface IGetSteamWorkshopItems : ICommandAsync<List<Item>, List<ulong>> {}

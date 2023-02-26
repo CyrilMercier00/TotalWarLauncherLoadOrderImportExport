@@ -48,6 +48,7 @@ public static class AutofacContainer
                 context.Resolve<ISaveModsToFile>(),
                 context.Resolve<IGetModFromStream>(),
                 context.Resolve<IFindLauncherDataPath>(),
+                context.Resolve<IGetSteamWorkshopItems>(),
                 context.Resolve<IGetModsFromLauncherData>(),
                 context.Resolve<ISubscribeToWorkshopItems>()
             )).SingleInstance();
