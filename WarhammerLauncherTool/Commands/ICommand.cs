@@ -1,6 +1,6 @@
 ﻿namespace WarhammerLauncherTool.Commands;
 
-public interface ICommand <in TIn, out TOut>
+public interface ICommand <out TOut, in TIn>
 {
     TOut Execute(TIn input);
 }

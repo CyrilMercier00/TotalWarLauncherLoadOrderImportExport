@@ -6,7 +6,7 @@ using Serilog;
 using Steamworks.Data;
 using Steamworks.Ugc;
 
-namespace WarhammerLauncherTool.Commands.Implementations.Steam_related.GetModFromStream;
+namespace WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
 
 public class SubscribeToWorkshopItem : ISubscribeToWorkshopItems
 {

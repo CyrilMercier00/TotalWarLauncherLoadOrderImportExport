@@ -3,4 +3,4 @@ using WarhammerLauncherTool.Models;
 
 namespace WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 
-public interface IGetModFromStream : ICommand<Stream, Mod[]> {}
+public interface IGetModFromStream : ICommand<Mod[], Stream> {}
