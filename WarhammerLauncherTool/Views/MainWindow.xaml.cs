@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using WarhammerLauncherTool.Commands.Implementations.File_related.BackupFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.FindLauncherDataPath;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
@@ -21,12 +22,12 @@ public partial class MainWindow
     private const string ExportFileName = @"\ExportedLoadOrder.json";
 
     private const GameName SelectedGame = GameName.Warhammer3;
-    private readonly FileInfo _launcherDataInfo;
 
     private readonly string _desktopFolder;
     private readonly string _launcherData;
 
     private readonly ISelectFile _selectFile;
+    private readonly IBackupFile _backupFile;
     private readonly ISelectFolder _selectFolder;
     private readonly ISaveModsToFile _saveModsToFile;
     private readonly IGetModFromStream _getModsFromStream;
@@ -34,11 +35,12 @@ public partial class MainWindow
 
     public MainWindow(
         ISelectFile selectFile,
+        IBackupFile backupFile,
         ISelectFolder selectFolder,
         ISaveModsToFile saveModsToFile,
+        IGetModsForGame getModsForGame,
         IGetModFromStream getModsFromStream,
-        IFindLauncherDataPath findLauncherDataPath,
-        IGetModsForGame getModsForGame)
+        IFindLauncherDataPath findLauncherDataPath)
     {
         // Initalize all commands
         _selectFile = selectFile ?? throw new ArgumentNullException(nameof(selectFile));
@@ -46,6 +48,7 @@ public partial class MainWindow
         _saveModsToFile = saveModsToFile ?? throw new ArgumentNullException(nameof(saveModsToFile));
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
         _getModsForGame = getModsForGame ?? throw new ArgumentNullException(nameof(getModsForGame));
+        _backupFile = backupFile ?? throw new ArgumentNullException(nameof(backupFile));
 
         if (findLauncherDataPath is null) throw new ArgumentNullException(nameof(findLauncherDataPath));
 
@@ -56,16 +59,13 @@ public partial class MainWindow
         _desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
         // Ask to manually select the launcher data folder if it was not found
-        if (string.IsNullOrEmpty(_launcherData))
-        {
-            string roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = roamingFolder };
-            string path = _selectFile.Execute(parameters);
+        if (!string.IsNullOrEmpty(_launcherData)) return;
 
-            _launcherData = path;
-        }
+        string roamingFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var parameters = new SelectFileParameters { ModalTitle = string.Empty, StartingDirectory = roamingFolder };
+        string path = _selectFile.Execute(parameters);
 
-        _launcherDataInfo = new FileInfo(_launcherData);
+        _launcherData = path;
     }
 
     /// <summary>
@@ -145,15 +145,9 @@ public partial class MainWindow
         newModList.AddRange(modsNotInImport);
 
         // Backup old config
-        string mainDir = _launcherDataInfo.Directory!.FullName;
-        string backupDir = string.Concat(mainDir, "/ImportBackups");
-        Directory.CreateDirectory(backupDir);
+        _backupFile.Execute(_launcherData);
 
-        string date = DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss");
-        string backupName = string.Concat(backupDir, _launcherDataInfo.Name, ".backup-", date);
-        File.Copy(_launcherData, backupName);
-
-        // Save to file
+        // Replace old launcher data
         var saveToFileParameters = new SaveModsToFileParameters { mods = newModList, savePath = _launcherData };
         _saveModsToFile.Execute(saveToFileParameters);
     }

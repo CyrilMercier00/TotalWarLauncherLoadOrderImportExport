@@ -2,6 +2,7 @@
 using Autofac;
 using Serilog;
 using WarhammerLauncherTool.Commands;
+using WarhammerLauncherTool.Commands.Implementations.File_related.BackupFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.FindLauncherDataPath;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
@@ -45,11 +46,12 @@ public static class AutofacContainer
         builder.Register<MainWindow>(
             context => new MainWindow(
                 context.Resolve<ISelectFile>(),
+                context.Resolve<IBackupFile>(),
                 context.Resolve<ISelectFolder>(),
                 context.Resolve<ISaveModsToFile>(),
+                context.Resolve<IGetModsForGame>(),
                 context.Resolve<IGetModFromStream>(),
-                context.Resolve<IFindLauncherDataPath>(),
-                context.Resolve<IGetModsForGame>()
+                context.Resolve<IFindLauncherDataPath>()
             )).SingleInstance();
 
         return builder.Build();

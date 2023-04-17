@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace WarhammerLauncherTool.Exceptions;
 
+/// <summary>
+/// Generic custom exception for commands
+/// </summary>
 [Serializable]
 public class CommandException : Exception
 {
