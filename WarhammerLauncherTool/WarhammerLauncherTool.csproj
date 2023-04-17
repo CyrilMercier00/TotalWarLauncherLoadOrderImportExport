@@ -36,4 +36,10 @@
             <SubType>Designer</SubType>
         </Page>
     </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\README.md">
+        <Link>README.md</Link>
+      </Content>
+    </ItemGroup>
 </Project>
