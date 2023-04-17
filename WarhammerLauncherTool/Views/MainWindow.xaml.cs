@@ -10,6 +10,7 @@ using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
+using WarhammerLauncherTool.Commands.Implementations.Steam_related.GetSteamWorkshopItems;
 using WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
 using WarhammerLauncherTool.Models;
 

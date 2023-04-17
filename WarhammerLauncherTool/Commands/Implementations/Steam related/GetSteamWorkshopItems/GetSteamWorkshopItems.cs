@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Steamworks.Data;
 using Steamworks.Ugc;
 
-namespace WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
+namespace WarhammerLauncherTool.Commands.Implementations.Steam_related.GetSteamWorkshopItems;
 
 public class GetSteamWorkshopItems : IGetSteamWorkshopItems
 {

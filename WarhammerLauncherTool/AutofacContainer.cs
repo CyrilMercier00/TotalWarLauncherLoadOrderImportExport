@@ -8,6 +8,7 @@ using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
+using WarhammerLauncherTool.Commands.Implementations.Steam_related.GetSteamWorkshopItems;
 using WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
 using WarhammerLauncherTool.Views;
 
@@ -30,6 +31,9 @@ public static class AutofacContainer
 
         builder.RegisterAssemblyTypes(assemblies)
             .AsClosedTypesOf(typeof(ICommandAsync<>));
+
+        builder.RegisterAssemblyTypes(assemblies)
+            .AsClosedTypesOf(typeof(ICommandAsync<,>));
 
         // Serilog
         builder.Register<ILogger>((_, _) =>
