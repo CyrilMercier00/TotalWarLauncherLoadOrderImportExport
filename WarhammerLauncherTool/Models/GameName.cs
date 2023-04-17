@@ -4,5 +4,7 @@ public enum GameName
 {
     Warhammer3,
     Warhammer2,
-    Threekingdoms
+    Threekingdoms,
+    Rome,
+    Rome2
 }
