@@ -11,3 +11,8 @@ public interface ICommandAsync <in TIn>
 {
     Task ExecuteAsync(TIn input);
 }
+
+public interface ICommandAsync
+{
+    Task ExecuteAsync();
+}

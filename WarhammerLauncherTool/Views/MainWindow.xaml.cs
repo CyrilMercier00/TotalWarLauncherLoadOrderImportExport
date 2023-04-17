@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
-using Serilog;
 using WarhammerLauncherTool.Commands.Implementations.File_related.FindLauncherDataPath;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
-using WarhammerLauncherTool.Commands.Implementations.Steam_related.GetSteamWorkshopItems;
-using WarhammerLauncherTool.Commands.Implementations.Steam_related.SubscribeToWorkshopItems;
 using WarhammerLauncherTool.Models;
 
 namespace WarhammerLauncherTool.Views;
@@ -23,7 +20,7 @@ public partial class MainWindow
 {
     private const string ExportFileName = @"\ExportedLoadOrder.json";
 
-    private readonly GameName SelectedGame = GameName.Warhammer3; // TODO : Implement game selection
+    private const GameName SelectedGame = GameName.Warhammer3;
     private readonly FileInfo _launcherDataInfo;
 
     private readonly string _desktopFolder;
@@ -33,39 +30,28 @@ public partial class MainWindow
     private readonly ISelectFolder _selectFolder;
     private readonly ISaveModsToFile _saveModsToFile;
     private readonly IGetModFromStream _getModsFromStream;
-    private readonly IFindLauncherDataPath _findLauncherDataPath;
-    private readonly IGetSteamWorkshopItems _getSteamWorkshopItems;
     private readonly IGetModsFromLauncherData _getModsFromLauncherData;
-    private readonly ISubscribeToWorkshopItems _subscribeToWorkshopItems;
-
-    private readonly ILogger _logger;
 
     public MainWindow(
-        ILogger logger,
         ISelectFile selectFile,
         ISelectFolder selectFolder,
         ISaveModsToFile saveModsToFile,
         IGetModFromStream getModsFromStream,
         IFindLauncherDataPath findLauncherDataPath,
-        IGetSteamWorkshopItems getSteamWorkshopItems,
-        IGetModsFromLauncherData getModsFromLauncherData,
-        ISubscribeToWorkshopItems subscribeToWorkshopItems)
+        IGetModsFromLauncherData getModsFromLauncherData)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
         // Initalize all commands
         _selectFile = selectFile ?? throw new ArgumentNullException(nameof(selectFile));
         _selectFolder = selectFolder ?? throw new ArgumentNullException(nameof(selectFolder));
         _saveModsToFile = saveModsToFile ?? throw new ArgumentNullException(nameof(saveModsToFile));
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
-        _findLauncherDataPath = findLauncherDataPath ?? throw new ArgumentNullException(nameof(findLauncherDataPath));
-        _getSteamWorkshopItems = getSteamWorkshopItems ?? throw new ArgumentNullException(nameof(getSteamWorkshopItems));
         _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
-        _subscribeToWorkshopItems = subscribeToWorkshopItems ?? throw new ArgumentNullException(nameof(subscribeToWorkshopItems));
+
+        if (findLauncherDataPath is null) throw new ArgumentNullException(nameof(findLauncherDataPath));
 
         InitializeComponent();
 
-        _launcherData = _findLauncherDataPath.Execute();
+        _launcherData = findLauncherDataPath.Execute();
         _desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
         // Ask to manually select the launcher data folder if it was not found
@@ -139,16 +125,6 @@ public partial class MainWindow
         var isForCurrentGame = launcherModsConfig.ToLookup(mod => mod.Game == SelectedGame);
         var modsForCurrentGame = isForCurrentGame[true].ToList();
         var modsForOtherGames = isForCurrentGame[false].ToList();
-
-        // Login to steam account
-        // TODO
-
-        // Get mods that the user is not subscribed to
-        var uids = modsForCurrentGame.Select(mod => mod.workshopUid).ToList();
-        var workshopItems = await _getSteamWorkshopItems.ExecuteAsync(uids).ConfigureAwait(false);
-
-        // Subscribe to missing mods
-        await _subscribeToWorkshopItems.ExecuteAsync(workshopItems).ConfigureAwait(false);
 
         // Filter out mods that are installed but not present in the import
         var modsNotInImport = modsForCurrentGame.Where(mod => importedMods.Exists(existingMod => existingMod.Uuid == mod.Uuid)).OrderBy(mods => mods.Order).ToList();
