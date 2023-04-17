@@ -7,7 +7,7 @@ using WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
-using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
+using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsForGame;
 using WarhammerLauncherTool.Views;
 
 namespace WarhammerLauncherTool;
@@ -49,7 +49,7 @@ public static class AutofacContainer
                 context.Resolve<ISaveModsToFile>(),
                 context.Resolve<IGetModFromStream>(),
                 context.Resolve<IFindLauncherDataPath>(),
-                context.Resolve<IGetModsFromLauncherData>()
+                context.Resolve<IGetModsForGame>()
             )).SingleInstance();
 
         return builder.Build();

@@ -11,7 +11,7 @@ public class SelectFile : ISelectFile
     public SelectFile(ILogger logger) { _logger = logger ?? throw new ArgumentNullException(nameof(logger)); }
 
     /// <summary>
-    /// Opens a file dialogue window to select a file with either a .json or .txt extension.
+    /// <see cref="ISelectFile" />
     /// </summary>
     /// <param name="parameters"></param>
     /// <returns> The path of the file is returned, otherwise an empty string is returned. </returns>

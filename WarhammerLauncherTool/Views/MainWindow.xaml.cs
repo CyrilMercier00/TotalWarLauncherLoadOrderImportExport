@@ -8,7 +8,7 @@ using WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFile;
 using WarhammerLauncherTool.Commands.Implementations.File_related.SelectFolder;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
-using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsFromLauncherData;
+using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModsForGame;
 using WarhammerLauncherTool.Models;
 
 namespace WarhammerLauncherTool.Views;
@@ -30,7 +30,7 @@ public partial class MainWindow
     private readonly ISelectFolder _selectFolder;
     private readonly ISaveModsToFile _saveModsToFile;
     private readonly IGetModFromStream _getModsFromStream;
-    private readonly IGetModsFromLauncherData _getModsFromLauncherData;
+    private readonly IGetModsForGame _getModsForGame;
 
     public MainWindow(
         ISelectFile selectFile,
@@ -38,19 +38,20 @@ public partial class MainWindow
         ISaveModsToFile saveModsToFile,
         IGetModFromStream getModsFromStream,
         IFindLauncherDataPath findLauncherDataPath,
-        IGetModsFromLauncherData getModsFromLauncherData)
+        IGetModsForGame getModsForGame)
     {
         // Initalize all commands
         _selectFile = selectFile ?? throw new ArgumentNullException(nameof(selectFile));
         _selectFolder = selectFolder ?? throw new ArgumentNullException(nameof(selectFolder));
         _saveModsToFile = saveModsToFile ?? throw new ArgumentNullException(nameof(saveModsToFile));
         _getModsFromStream = getModsFromStream ?? throw new ArgumentNullException(nameof(getModsFromStream));
-        _getModsFromLauncherData = getModsFromLauncherData ?? throw new ArgumentNullException(nameof(getModsFromLauncherData));
+        _getModsForGame = getModsForGame ?? throw new ArgumentNullException(nameof(getModsForGame));
 
         if (findLauncherDataPath is null) throw new ArgumentNullException(nameof(findLauncherDataPath));
 
         InitializeComponent();
 
+        // Try to read the 
         _launcherData = findLauncherDataPath.Execute();
         _desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
@@ -79,15 +80,18 @@ public partial class MainWindow
 
         if (string.IsNullOrEmpty(savePath)) return;
 
-        var param = new GetModsFromLauncherDataParameter { GameName = SelectedGame, FilePath = _launcherData };
-        var stream = _getModsFromLauncherData.Execute(param);
-        var fileStream = File.Create(savePath + ExportFileName);
+        var param = new GetModsForGameParameter { GameName = SelectedGame, FilePath = _launcherData };
+        using (var stream = _getModsForGame.Execute(param))
+        {
+            using (var fileStream = File.Create(savePath + ExportFileName))
+            {
+                stream.Position = 0;
+                fileStream.Position = 0;
 
-        stream.Position = 0;
-        fileStream.Position = 0;
-
-        stream.CopyTo(fileStream);
-        fileStream.Close();
+                stream.CopyTo(fileStream);
+                fileStream.Close();
+            }
+        }
     }
 
     /// <summary>

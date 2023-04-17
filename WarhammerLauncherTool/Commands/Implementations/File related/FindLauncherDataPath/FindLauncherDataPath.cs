@@ -14,8 +14,7 @@ public class FindLauncherDataPath : IFindLauncherDataPath
     public FindLauncherDataPath(ILogger logger) { _logger = logger ?? throw new ArgumentNullException(nameof(logger)); }
 
     /// <summary>
-    /// Attempts to retrieve the path of a file containing launcher data from the user's application data folder.
-    /// It will log a warning if the file is not found.
+    /// <see cref="IFindLauncherDataPath" />
     /// </summary>
     /// <returns></returns>
     public string Execute()
