@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.IO;
 using System.Linq;
-using Serilog;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.GetModFromStream;
 using WarhammerLauncherTool.Commands.Implementations.Mod_related.ModListToStream;
 
@@ -36,6 +36,7 @@ public class GetModsForGame : IGetModsForGame
 
             return exportStream;
         }
+        // TODO: handle FileNotFoundException
         catch (Exception e)
         {
             Logger.Error(e, "Unable to retrieve mods from {Path} for game {GameName}", parameters.GameName, parameters.FilePath);

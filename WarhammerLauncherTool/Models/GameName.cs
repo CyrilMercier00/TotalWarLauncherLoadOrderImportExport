@@ -1,4 +1,6 @@
-﻿namespace WarhammerLauncherTool.Models;
+﻿using System.Runtime.Serialization;
+
+namespace WarhammerLauncherTool.Models;
 
 public enum GameName
 {
@@ -13,7 +15,7 @@ public enum GameName
     Shogun,
     Shogun2,
     Threekingdoms,
-    Warhammer3,
+    [EnumMember(Value = "11")] Warhammer3,
     Warhammer2,
     Warhammer
 }

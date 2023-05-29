@@ -5,6 +5,6 @@ namespace WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsTo
 
 public class SaveModsToFileParameters
 {
-    public required string savePath { get; init; }
-    public required List<Mod> mods { get; init; }
+    public required string SavePath { get; init; }
+    public required List<Mod> Mods { get; init; }
 }

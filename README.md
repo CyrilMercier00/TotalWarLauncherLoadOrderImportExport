@@ -8,14 +8,18 @@ A tool that can export and import the mods load order for TotalWar Warhammer 3.
 
 1. Subscribe to the mods.
 2. Wait for all the mods to be downloaded.
-3. Re-order the load order and check the mods you want to play with inside the TotalWar launcher.
-4. Export the configuration using this tool.
+3. Re-order the mods load order and check the mods you want to play with inside the TotalWar launcher.
+4. Press the back button (This will update the load order file).
+5. Export the configuration using this tool.
 
 ### Import
 
 1. Subscribe to the same mods as the other user.
 2. Wait for all the mods to be downloaded.
-3. Click the import button then select the exported .JSON file.
+3. Open the TotalWar launcher
+4. Go to the ModManager page
+5. Press the back button (This will update the load order file).
+6. Click the import button then select the exported .JSON file.
 
 ### Backups
 

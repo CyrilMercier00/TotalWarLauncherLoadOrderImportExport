@@ -126,12 +126,24 @@ public partial class MainWindow
         var modsForCurrentGame = isForCurrentGame[true].ToList();
         var modsForOtherGames = isForCurrentGame[false].ToList();
 
-        // Filter out mods that are installed but not present in the import
-        var modsNotInImport = modsForCurrentGame.Where(mod => importedMods.Exists(existingMod => existingMod.Uuid == mod.Uuid)).OrderBy(mods => mods.Order).ToList();
+        // Filter out mods that are installed but not present in the import, and turn them off
+        var modsNotInImport = modsForCurrentGame.Where(mod => !importedMods.Exists(existingMod => existingMod.Uuid == mod.Uuid)).ToList();
         for (int i = 0; i < modsNotInImport.Count; i++)
         {
             modsNotInImport[i].Active = false;
             modsNotInImport[i].Order = importedMods.Count + i;
+        }
+
+        // Remove from og list mods that are already in import to avoid duplicates
+        foreach (var importedMod in importedMods)
+        {
+            foreach (var launcherMod in modsForCurrentGame)
+            {
+                if (launcherMod.Uuid != importedMod.Uuid) continue;
+
+                launcherMod.Active = importedMod.Active;
+                launcherMod.Order = importedMod.Order;
+            }
         }
 
         // Build new modList
@@ -144,7 +156,7 @@ public partial class MainWindow
         _backupFile.Execute(_launcherData);
 
         // Replace old launcher data
-        var saveToFileParameters = new SaveModsToFileParameters { mods = newModList, savePath = _launcherData };
+        var saveToFileParameters = new SaveModsToFileParameters { Mods = newModList, SavePath = _launcherData };
         _saveModsToFile.Execute(saveToFileParameters);
     }
 }

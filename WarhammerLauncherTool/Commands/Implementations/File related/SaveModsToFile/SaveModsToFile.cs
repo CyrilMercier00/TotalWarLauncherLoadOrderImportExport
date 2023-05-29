@@ -1,7 +1,7 @@
-﻿using System;
-using System.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog;
+using System;
+using System.IO;
 
 namespace WarhammerLauncherTool.Commands.Implementations.File_related.SaveModsToFile;
 
@@ -15,24 +15,24 @@ public class SaveModsToFile : ISaveModsToFile
     /// <see cref="ISaveModsToFile" />
     /// </summary>
     /// <param name="parameters"></param>
-    /// <returns> The path of the file is returned, otherwise an empty string is returned. </returns>
+    /// <returns> The path to the file is returned </returns>
     public string Execute(SaveModsToFileParameters parameters)
     {
         try
         {
-            using (var newFileStream = File.Open(parameters.savePath, FileMode.Create))
+            using (var newFileStream = File.Open(parameters.SavePath, FileMode.Create))
             {
-                string serializedData = JsonConvert.SerializeObject(parameters.mods);
+                string serializedData = JsonConvert.SerializeObject(parameters.Mods);
                 using var writer = new StreamWriter(newFileStream);
                 writer.Write(serializedData);
                 writer.Close();
             }
 
-            return parameters.savePath;
+            return parameters.SavePath;
         }
         catch (Exception e)
         {
-            _logger.Error(e, "Unable to save file to {Directory}", parameters.savePath);
+            _logger.Error(e, "Unable to save file to {Directory}", parameters.SavePath);
             throw;
         }
     }
