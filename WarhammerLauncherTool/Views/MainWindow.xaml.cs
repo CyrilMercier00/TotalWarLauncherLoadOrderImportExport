@@ -117,10 +117,6 @@ public partial class MainWindow
             importedMods.AddRange(mods);
         }
 
-        // Reorder mods that were already downloaded to fill gaps in the order
-        importedMods = importedMods.OrderBy(mod => mod.Order).ToList();
-        for (int i = 0; i < importedMods.Count; i++) importedMods[i].Order = i;
-
         // Retrieve existing mods
         await using var fileStream = File.Open(_launcherData, FileMode.Open);
         var launcherModsConfig = _getModsFromStream.Execute(fileStream);
